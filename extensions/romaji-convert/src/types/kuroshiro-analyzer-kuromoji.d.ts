@@ -8,7 +8,7 @@ declare class KuromojiAnalyzer {
      * @param {Object} [options] JSON object which have key-value pairs settings
      * @param {string} [options.dictPath] Path of the dictionary files
      */
-    constructor({ dictPath: string } = {});
+    constructor(options?: { dictPath?: string });
 
     /**
      * Initialize the analyzer
@@ -43,5 +43,9 @@ declare class KuromojiAnalyzer {
 }
 
 declare module 'kuroshiro-analyzer-kuromoji' {
+    export default KuromojiAnalyzer;
+}
+
+declare module 'kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.js' {
     export default KuromojiAnalyzer;
 }

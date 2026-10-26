@@ -1,0 +1,39 @@
+name: Verify Romaji Convert
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - 'extensions/romaji-convert/**'
+            - 'libs/shared/**'
+            - 'package*.json'
+            - 'manifest.json'
+            - '.github/workflows/romaji-convert.yml'
+    pull_request:
+        paths:
+            - 'extensions/romaji-convert/**'
+            - 'libs/shared/**'
+            - 'package*.json'
+            - 'manifest.json'
+            - '.github/workflows/romaji-convert.yml'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    verify:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: npm
+            - run: npm ci
+            - run: npm test --workspace romaji-convert
+            - run: npm run lint --workspace romaji-convert
+            - run: npm run build-local --workspace romaji-convert
+            - name: Validate Marketplace paths
+              run: |
+                  node -e 'const fs=require("node:fs");for(const item of JSON.parse(fs.readFileSync("manifest.json"))){for(const key of ["main","preview","readme"]){if(!fs.existsSync(item[key]))throw new Error("Missing "+key+": "+item[key]);}}'

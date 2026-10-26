@@ -1,22 +1,22 @@
-import { waitForSpicetify } from '@shared/utils/spicetify-utils';
+import { waitForConversionApis } from './helpers/spicetify-ready';
+import { trackContextMenuTarget } from './helpers/selected-name';
 import i18next from 'i18next';
 import { Languages } from 'lucide-react';
 import React from 'react';
 import { SettingsModal } from './components/settings-modal.component';
 import { contextMenuService } from './services/context-menu.service';
-import { kuroshiroService } from './services/kuroshiro.service';
 
 async function main(): Promise<void> {
-    await waitForSpicetify();
-
-    // Init services
-    await kuroshiroService.init();
+    await waitForConversionApis();
+    trackContextMenuTarget();
 
     // Init translations
-    const locale: typeof Spicetify.Locale = Spicetify.Locale;
+    const locale = Spicetify.Locale as
+        | Partial<typeof Spicetify.Locale>
+        | undefined;
 
     await i18next.init({
-        lng: locale.getLocale(),
+        lng: locale?.getLocale?.() ?? 'en',
         fallbackLng: 'en',
         debug: false,
         resources: {
@@ -59,6 +59,9 @@ async function main(): Promise<void> {
                     contextMenu: {
                         name: 'Convert to {{syllabary, lowercase}}',
                         error: `Couldn't get the selected element's name.`,
+                        loading: 'Loading Japanese dictionary…',
+                        conversionError:
+                            'Japanese conversion failed. Check your connection and try again.',
                     },
                 },
             },
@@ -101,6 +104,9 @@ async function main(): Promise<void> {
                     contextMenu: {
                         name: 'Convertir en {{syllabary, lowercase}}',
                         error: `Impossible de récupérer le nom de l'élément sélectionné.`,
+                        loading: 'Chargement du dictionnaire japonais…',
+                        conversionError:
+                            'Échec de la conversion japonaise. Vérifiez votre connexion et réessayez.',
                     },
                 },
             },

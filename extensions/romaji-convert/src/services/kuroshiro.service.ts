@@ -6,6 +6,7 @@ import {
 
 export class KuroshiroService {
     private kuroshiro: Kuroshiro | null = null;
+    private initialization: Promise<void> | null = null;
     private readonly settingsService: KuroshiroSettingsService;
 
     constructor() {
@@ -15,8 +16,22 @@ export class KuroshiroService {
     /**
      * Init the Kuroshiro service.
      */
+    public get isReady(): boolean {
+        return this.kuroshiro !== null;
+    }
+
     public async init(): Promise<void> {
-        this.kuroshiro = await new KuroshiroBuilder().createKuroshiro();
+        if (this.kuroshiro !== null) return;
+        this.initialization ??= new KuroshiroBuilder()
+            .createKuroshiro()
+            .then((kuroshiro) => {
+                this.kuroshiro = kuroshiro;
+            })
+            .catch((error: unknown) => {
+                this.initialization = null;
+                throw error;
+            });
+        await this.initialization;
     }
 
     /**
@@ -24,14 +39,9 @@ export class KuroshiroService {
      * @param value The japanese value to convert.
      */
     public async convert(value: string): Promise<string> {
-        if (this.kuroshiro === null) {
-            console.error(
-                "Property 'kuroshiro' is null. Call 'init' before using the service.",
-            );
-            return '';
-        }
+        await this.init();
 
-        return await this.kuroshiro.convert(value, {
+        return await this.kuroshiro!.convert(value, {
             to: this.settingsService.targetSyllabary,
             mode: this.settingsService.conversionMode,
             romajiSystem: this.settingsService.romajiSystem,
